@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Thought Processor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Thought Processor</h1>
+            <p>Capture ideas, let the Claude Council classify & rank by ROI</p>
+        </header>
+
+        <section class="new-thought">
+            <textarea id="thought-input" placeholder="Type or paste your thought here…" rows="3"></textarea>
+            <div class="input-actions">
+                <button id="process-btn">Process with Claude Council</button>
+                <button id="voice-btn" style="margin-left:0.5rem;">🎤 Simulate Voice</button>
+            </div>
+            <div id="feedback" class="feedback"></div>
+        </section>
+
+        <section class="filters">
+            <label for="sort-select">Sort by:</label>
+            <select id="sort-select">
+                <option value="new">Newest First</option>
+                <option value="roi">Highest ROI First</option>
+            </select>
+        </section>
+
+        <section class="thoughts-list" id="thoughts-list">
+            <!-- Thought cards will be inserted here -->
+        </section>
+    </div>
+
+    <script src="/script.js"></script>
+</body>
+</html>
