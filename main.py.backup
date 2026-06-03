@@ -114,18 +114,12 @@ def display_menu():
 
 def get_user_input():
     """Get thought input from user"""
-    print("\nEnter your thought (or type 'record' to simulate voice recording):")
-    try:
-        user_input = input("> ").strip()
-    except EOFError:
-        return None
+    print("\n💭 Enter your thought (or type 'record' to simulate voice recording):")
+    user_input = input("> ").strip()
 
     if user_input.lower() == 'record':
-        print("\nSimulating voice recording... (in a real app, this would use microphone)")
-        try:
-            thought = input("What did you say? ").strip()
-        except EOFError:
-            return None
+        print("\n🎤 Simulating voice recording... (in a real app, this would use microphone)")
+        thought = input("📝 What did you say? ").strip()
         return thought if thought else None
     return user_input if user_input else None
 

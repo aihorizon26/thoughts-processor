@@ -1,0 +1,8 @@
+# Troubleshooting Log for Thoughts App
+Started: Tue, Jun  2, 2026  8:33:35 AM
+=== TROUBLESHOOTING LOG ===
+Wed, Jun  3, 2026  8:45:37 AM: Started troubleshooting
+=== TROUBLESHOOTING LOG UPDATE ===
+Wed, Jun  3, 2026  8:46:09 AM: Fixed CLI app encoding and EOF errors
+Wed, Jun  3, 2026  8:46:09 AM: Modified API to work with mock Supabase when real credentials not available
+Wed, Jun  3, 2026  8:46:09 AM: API tested locally with mock Supabase - GET and POST endpoints working
