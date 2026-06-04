@@ -114,12 +114,18 @@ def display_menu():
 
 def get_user_input():
     """Get thought input from user"""
-    print("\n💭 Enter your thought (or type 'record' to simulate voice recording):")
-    user_input = input("> ").strip()
+    print("\nEnter your thought (or type 'record' to simulate voice recording):")
+    try:
+        user_input = input("> ").strip()
+    except EOFError:
+        return None
 
     if user_input.lower() == 'record':
-        print("\n🎤 Simulating voice recording... (in a real app, this would use microphone)")
-        thought = input("📝 What did you say? ").strip()
+        print("\nSimulating voice recording... (in a real app, this would use microphone)")
+        try:
+            thought = input("What did you say? ").strip()
+        except EOFError:
+            return None
         return thought if thought else None
     return user_input if user_input else None
 
@@ -135,7 +141,11 @@ def main():
 
     while True:
         display_menu()
-        choice = input("Select an option (1-4): ").strip()
+        try:
+            choice = input("Select an option (1-4): ").strip()
+        except EOFError:
+            print("\n[-] Input not available in this context. Exiting.")
+            break
 
         if choice == '1':
             thought = get_user_input()

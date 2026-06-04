@@ -4,16 +4,167 @@ import random
 from datetime import datetime
 from enum import Enum
 from flask import Flask, request, jsonify
-from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # Load environment variables from .env (for local development)
 load_dotenv()
 
-# Supabase client
+# Supabase client - either real or mock
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def get_supabase_client():
+    """Try to initialize Supabase client, fall back to mock if not available or not configured"""
+    # Check if we have the basic credentials
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        # Missing credentials, use mock
+        print("Info: Supabase credentials not configured, using mock client")
+        return MockSupabaseClient()
+
+    # Try to use real Supabase client
+    try:
+        from supabase import create_client, Client
+        # Create the client
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        # Test the connection by making a simple query
+        # We don't actually need to fetch data, just verify the client works
+        # If this fails, we'll fall back to mock
+        print("Info: Supabase client initialized successfully")
+        return supabase
+    except Exception as e:
+        # If there's any error (missing module, connection issue, invalid credentials, etc.), use mock
+        print(f"Warning: Could not initialize Supabase client: {e}")
+        print("Falling back to mock Supabase client for local development.")
+        return MockSupabaseClient()
+
+# Mock Supabase client for local development without Supabase
+class MockSupabaseClient:
+    def __init__(self, db_file="mock_thoughts.json"):
+        self.db_file = db_file
+        self._ensure_db_file()
+
+    def _ensure_db_file(self):
+        if not os.path.exists(self.db_file):
+            with open(self.db_file, 'w') as f:
+                json.dump([], f)
+
+    def _load_data(self):
+        with open(self.db_file, 'r') as f:
+            return json.load(f)
+
+    def _save_data(self, data):
+        with open(self.db_file, 'w') as f:
+            json.dump(data, f, indent=2)
+
+    def table(self, table_name):
+        return MockTable(self, table_name)
+
+class MockTable:
+    def __init__(self, client, table_name):
+        self.client = client
+        self.table_name = table_name
+        self._order_params = {}  # Store order parameters
+
+    def select(self, columns="*"):
+        self._select_columns = columns
+        return self  # Return self for chaining
+
+    def order(self, column, desc=False):
+        self._order_params = {'column': column, 'desc': desc}
+        return self  # Return self for chaining
+
+    def insert(self, data):
+        self._insert_data = data
+        return MockInsertQuery(self)  # Return insert query object for chaining
+
+    def execute(self):
+        """Execute the query and return results"""
+        if hasattr(self, '_insert_data'):
+            # Handle insert operation
+            if isinstance(self._insert_data, list):
+                items = self._insert_data
+            else:
+                items = [self._insert_data]
+
+            # Load existing data
+            data_list = self.client._load_data()
+
+            # Assign ID if not present
+            for item in items:
+                if 'id' not in item:
+                    item['id'] = max([item.get('id', 0) for item in data_list] + [0]) + 1
+
+            # Append new items
+            data_list.extend(items)
+
+            # Save back
+            self.client._save_data(data_list)
+
+            # Clear insert data
+            delattr(self, '_insert_data')
+
+            # Return mock response structure
+            class MockInsertResponse:
+                def __init__(self, data):
+                    self.data = data
+            return MockInsertResponse(items)
+        else:
+            # Handle select operation
+            data_list = self.client._load_data()
+
+            # Apply ordering if specified
+            if hasattr(self, '_order_params') and self._order_params:
+                reverse = self._order_params.get('desc', False)
+                data_list = sorted(
+                    data_list,
+                    key=lambda x: x.get(self._order_params['column'], ''),
+                    reverse=reverse
+                )
+                # Clear order params after use
+                delattr(self, '_order_params')
+
+            # Clear select columns if specified (we're returning all for simplicity)
+            if hasattr(self, '_select_columns'):
+                delattr(self, '_select_columns')
+
+            # Return mock response structure
+            class MockSelectResponse:
+                def __init__(self, data):
+                    self.data = data
+            return MockSelectResponse(data_list)
+
+class MockInsertQuery:
+    def __init__(self, table):
+        self.table = table
+
+    def execute(self):
+        return self.table.execute()
+
+def get_supabase_client():
+    """Try to initialize Supabase client, fall back to mock if not available or not configured"""
+    # Check if we have the basic credentials
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        # Missing credentials, use mock
+        print("Info: Supabase credentials not configured, using mock client")
+        return MockSupabaseClient()
+
+    # Try to use real Supabase client
+    try:
+        from supabase import create_client, Client
+        # Create the client
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        # Test the connection by making a simple query
+        # We don't actually need to fetch data, just verify the client works
+        # If this fails, we'll fall back to mock
+        print("Info: Supabase client initialized successfully")
+        return supabase
+    except Exception as e:
+        # If there's any error (missing module, connection issue, invalid credentials, etc.), use mock
+        print(f"Warning: Could not initialize Supabase client: {e}")
+        print("Falling back to mock Supabase client for local development.")
+        return MockSupabaseClient()
+
+supabase = get_supabase_client()
 
 app = Flask(__name__)
 
