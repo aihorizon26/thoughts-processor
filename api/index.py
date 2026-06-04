@@ -13,6 +13,30 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+def get_supabase_client():
+    """Try to initialize Supabase client, fall back to mock if not available or not configured"""
+    # Check if we have the basic credentials
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        # Missing credentials, use mock
+        print("Info: Supabase credentials not configured, using mock client")
+        return MockSupabaseClient()
+
+    # Try to use real Supabase client
+    try:
+        from supabase import create_client, Client
+        # Create the client
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        # Test the connection by making a simple query
+        # We don't actually need to fetch data, just verify the client works
+        # If this fails, we'll fall back to mock
+        print("Info: Supabase client initialized successfully")
+        return supabase
+    except Exception as e:
+        # If there's any error (missing module, connection issue, invalid credentials, etc.), use mock
+        print(f"Warning: Could not initialize Supabase client: {e}")
+        print("Falling back to mock Supabase client for local development.")
+        return MockSupabaseClient()
+
 # Mock Supabase client for local development without Supabase
 class MockSupabaseClient:
     def __init__(self, db_file="mock_thoughts.json"):

@@ -141,7 +141,11 @@ def main():
 
     while True:
         display_menu()
-        choice = input("Select an option (1-4): ").strip()
+        try:
+            choice = input("Select an option (1-4): ").strip()
+        except EOFError:
+            print("\n[-] Input not available in this context. Exiting.")
+            break
 
         if choice == '1':
             thought = get_user_input()
